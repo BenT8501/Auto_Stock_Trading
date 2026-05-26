@@ -1,0 +1,94 @@
+project:
+  name: TradingProgram
+  mode: backtest
+
+data:
+  start_date: "2024-01-01"
+  end_date: "2024-03-31"
+  timeframe: "1d"
+  sample_file: data/sample/sample_ohlcv.csv
+  universe_ohlcv_file: data/processed/universe_ohlcv.csv
+  source:
+    universe: csv
+    ohlcv_us: yfinance
+    ohlcv_kr: pykrx
+    holdings_orders: kis
+
+universe:
+  us_file: data/universe/us_top100.csv
+  kr_file: data/universe/kr_top80.csv
+
+strategy:
+  use_market_filter: false
+  data_window:
+    history_days: 365
+    buy_signal_recent_days: 90
+    buy_signal_min_recent_days: 30
+    long_trend_min_days: 180
+    long_trend_max_days: 365
+  moving_average:
+    short_window: 20
+    long_window: 60
+    slope_period: 1
+  volume:
+    window: 20
+    multiplier: 1.0
+  candle:
+    body_avg_window: 20
+  buy_patterns:
+    - hammer
+    - bullish_engulfing
+    - morning_star
+  sell_patterns:
+    - bearish_engulfing
+    - shooting_star
+
+execution:
+  breakout_buffer_pct: 0.001
+  max_gap_up_pct: 0.03
+  use_gap_filter: true
+  same_day_stop_first: true
+
+risk:
+  initial_cash: 10000000
+  max_positions: 1
+  position_size_pct: 0.10
+  max_new_positions_per_day: 1
+  stop_loss_pct: -0.03
+  take_profit_pct: 0.07
+  market_allocation:
+    US: 0.60
+    KR: 0.40
+
+costs:
+  US:
+    buy_fee_pct: 0.001
+    sell_fee_pct: 0.001
+    sell_tax_pct: 0.0
+    slippage_pct: 0.001
+  KR:
+    buy_fee_pct: 0.00015
+    sell_fee_pct: 0.00015
+    sell_tax_pct: 0.0015
+    slippage_pct: 0.001
+
+broker:
+  type: paper
+  live_trading_enabled: false
+  read_only: true
+  kis:
+    base_url: "https://openapi.koreainvestment.com:9443"
+    virtual_base_url: "https://openapivts.koreainvestment.com:29443"
+    use_virtual: true
+
+automation:
+  enabled: false
+  mode: paper
+  manual_approval_required: true
+  source: universe
+  scan_us: true
+  scan_kr: true
+  max_scan_us: 100
+  max_scan_kr: 80
+  max_order_amount_krw: 100000
+  max_order_amount_usd: 100

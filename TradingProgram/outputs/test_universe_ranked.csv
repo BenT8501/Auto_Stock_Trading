@@ -1,0 +1,4 @@
+symbol,name,market,rank,active
+BBB,Beta,US,2,true
+AAA,Alpha,US,1,true
+CCC,Gamma,US,3,false

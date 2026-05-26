@@ -1,0 +1,2 @@
+symbol,market,entry_date,exit_date,entry_price,exit_price,shares,pnl,return_pct,holding_days,exit_reason
+SAMPLE,US,2024-02-02,2024-02-05,124.12399999999998,132.81268,8056,65856.24229184014,0.06586000000000015,3,take_profit

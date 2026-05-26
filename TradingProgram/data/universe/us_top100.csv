@@ -1,0 +1,101 @@
+symbol,name,market,rank,active,exchange
+NVDA,NVIDIA Corp,US,1,true,NAS
+AAPL,Apple Inc,US,2,true,NAS
+MSFT,Microsoft Corp,US,3,true,NAS
+AMZN,Amazon.com Inc,US,4,true,NAS
+GOOGL,Alphabet Inc Class A,US,5,true,NAS
+GOOG,Alphabet Inc Class C,US,6,true,NAS
+AVGO,Broadcom Inc,US,7,true,NAS
+TSLA,Tesla Inc,US,8,true,NAS
+META,Meta Platforms Inc,US,9,true,NAS
+BRK.B,Berkshire Hathaway Inc Class B,US,10,true,NYS
+WMT,Walmart Inc,US,11,true,NYS
+LLY,Eli Lilly & Co,US,12,true,NYS
+MU,Micron Technology Inc,US,13,true,NAS
+JPM,JPMorgan Chase & Co,US,14,true,NYS
+AMD,Advanced Micro Devices Inc,US,15,true,NAS
+XOM,Exxon Mobil Corp,US,16,true,NYS
+V,Visa Inc,US,17,true,NYS
+INTC,Intel Corp,US,18,true,NAS
+JNJ,Johnson & Johnson,US,19,true,NYS
+ORCL,Oracle Corp,US,20,true,NYS
+CSCO,Cisco Systems Inc,US,21,true,NAS
+COST,Costco Wholesale Corp,US,22,true,NAS
+MA,Mastercard Inc,US,23,true,NYS
+CAT,Caterpillar Inc,US,24,true,NYS
+LRCX,Lam Research Corp,US,25,true,NAS
+CVX,Chevron Corp,US,26,true,NYS
+ABBV,AbbVie Inc,US,27,true,NYS
+NFLX,Netflix Inc,US,28,true,NAS
+BAC,Bank of America Corp,US,29,true,NYS
+UNH,UnitedHealth Group Inc,US,30,true,NYS
+KO,Coca-Cola Co,US,31,true,NYS
+AMAT,Applied Materials Inc,US,32,true,NAS
+PG,Procter & Gamble Co,US,33,true,NYS
+PLTR,Palantir Technologies Inc,US,34,true,NAS
+MS,Morgan Stanley,US,35,true,NYS
+GE,General Electric Co,US,36,true,NYS
+HD,Home Depot Inc,US,37,true,NYS
+MRK,Merck & Co Inc,US,38,true,NYS
+PM,Philip Morris International Inc,US,39,true,NYS
+GS,Goldman Sachs Group Inc,US,40,true,NYS
+TXN,Texas Instruments Inc,US,41,true,NAS
+GEV,GE Vernova Inc,US,42,true,NYS
+QCOM,QUALCOMM Inc,US,43,true,NAS
+KLAC,KLA Corp,US,44,true,NAS
+LIN,Linde PLC,US,45,true,NAS
+IBM,International Business Machines Corp,US,46,true,NYS
+RTX,RTX Corp,US,47,true,NYS
+WFC,Wells Fargo & Co,US,48,true,NYS
+SNDK,Sandisk Corp,US,49,true,NAS
+C,Citigroup Inc,US,50,true,NYS
+AXP,American Express Co,US,51,true,NYS
+PANW,Palo Alto Networks Inc,US,52,true,NAS
+TMUS,T-Mobile US Inc,US,53,true,NAS
+PEP,PepsiCo Inc,US,54,true,NAS
+VZ,Verizon Communications Inc,US,55,true,NYS
+MCD,McDonald's Corp,US,56,true,NYS
+ANET,Arista Networks Inc,US,57,true,NYS
+ADI,Analog Devices Inc,US,58,true,NAS
+DELL,Dell Technologies Inc,US,59,true,NYS
+NEE,NextEra Energy Inc,US,60,true,NYS
+AMGN,Amgen Inc,US,61,true,NAS
+STX,Seagate Technology Holdings PLC,US,62,true,NAS
+DIS,Walt Disney Co,US,63,true,NYS
+T,AT&T Inc,US,64,true,NYS
+TJX,TJX Cos Inc,US,65,true,NYS
+BA,Boeing Co,US,66,true,NYS
+CRWD,Crowdstrike Holdings Inc,US,67,true,NAS
+GLW,Corning Inc,US,68,true,NYS
+WDC,Western Digital Corp,US,69,true,NAS
+GILD,Gilead Sciences Inc,US,70,true,NAS
+TMO,Thermo Fisher Scientific Inc,US,71,true,NYS
+BLK,BlackRock Inc,US,72,true,NYS
+APH,Amphenol Corp,US,73,true,NYS
+APP,AppLovin Corp,US,74,true,NAS
+UNP,Union Pacific Corp,US,75,true,NYS
+SCHW,Charles Schwab Corp,US,76,true,NYS
+ISRG,Intuitive Surgical Inc,US,77,true,NAS
+WELL,Welltower Inc,US,78,true,NYS
+ABT,Abbott Laboratories,US,79,true,NYS
+ETN,Eaton Corp PLC,US,80,true,NYS
+PFE,Pfizer Inc,US,81,true,NYS
+CRM,Salesforce Inc,US,82,true,NYS
+COP,ConocoPhillips,US,83,true,NYS
+UBER,Uber Technologies Inc,US,84,true,NYS
+BX,Blackstone Inc,US,85,true,NYS
+HON,Honeywell International Inc,US,86,true,NAS
+DE,Deere & Co,US,87,true,NYS
+PLD,Prologis Inc,US,88,true,NYS
+CB,Chubb Ltd,US,89,true,NYS
+VRT,Vertiv Holdings,US,90,true,NYS
+BKNG,Booking Holdings Inc,US,91,true,NAS
+SPGI,S&P Global Inc,US,92,true,NYS
+MO,Altria Group Inc,US,93,true,NYS
+LMT,Lockheed Martin Corp,US,94,true,NYS
+DHR,Danaher Corp,US,95,true,NYS
+BMY,Bristol-Myers Squibb Co,US,96,true,NYS
+SYK,Stryker Corp,US,97,true,NYS
+LOW,Lowe's Cos Inc,US,98,true,NYS
+CVS,CVS Health Corp,US,99,true,NYS
+SBUX,Starbucks Corp,US,100,true,NAS

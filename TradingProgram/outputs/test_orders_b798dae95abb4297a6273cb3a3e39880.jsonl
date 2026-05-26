@@ -1,0 +1,1 @@
+{"id": "50933371-d76b-4bb8-8158-cf68cbfdcdbd", "created_at": "2026-05-26T16:28:27.668110+00:00", "market": "us", "symbol": "AAPL", "name": "Apple", "side": "BUY", "quantity": 1, "reference_price": 100, "estimated_amount": 100, "reason": "test", "status": "approved_paper", "status_note": "manual approval", "updated_at": "2026-05-26T16:28:27.676210+00:00"}

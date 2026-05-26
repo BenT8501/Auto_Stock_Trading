@@ -1,0 +1,7 @@
+pandas>=2.0
+PyYAML>=6.0
+pytest>=8.0
+requests>=2.27
+streamlit>=1.30
+yfinance>=0.2
+pykrx>=1.0

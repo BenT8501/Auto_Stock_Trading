@@ -1,0 +1,1 @@
+"""TradingProgram package."""
