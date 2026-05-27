@@ -5,3 +5,4 @@ requests>=2.27
 streamlit>=1.30
 yfinance>=0.2
 pykrx>=1.0
+PySide6>=6.7

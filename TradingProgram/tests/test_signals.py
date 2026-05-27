@@ -10,7 +10,7 @@ def test_buy_signal_only_uses_recent_window() -> None:
         "strategy": {
             "buy_patterns": ["hammer"],
             "sell_patterns": ["shooting_star"],
-            "volume": {"multiplier": 1.0},
+            "volume": {"multiplier": 1.2},
             "data_window": {"buy_signal_recent_days": 30},
         }
     }
@@ -23,7 +23,7 @@ def test_buy_signal_only_uses_recent_window() -> None:
                 "ma_long": 90,
                 "ma_short": 95,
                 "ma_short_slope": 1,
-                "volume": 100,
+                "volume": 130,
                 "volume_ma": 100,
                 "hammer": True,
                 "shooting_star": False,
@@ -35,7 +35,7 @@ def test_buy_signal_only_uses_recent_window() -> None:
                 "ma_long": 100,
                 "ma_short": 105,
                 "ma_short_slope": 1,
-                "volume": 100,
+                "volume": 130,
                 "volume_ma": 100,
                 "hammer": True,
                 "shooting_star": False,
@@ -47,3 +47,4 @@ def test_buy_signal_only_uses_recent_window() -> None:
 
     assert not bool(result.loc[0, "buy_signal"])
     assert bool(result.loc[1, "buy_signal"])
+    assert bool(result.loc[1, "setup_signal"])

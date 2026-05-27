@@ -13,7 +13,7 @@ from src.config import load_config
 from src.data_loader import filter_ohlcv_by_universe, load_ohlcv_csv, load_universe_csv
 from src.metrics import compute_metrics
 from src.external_data_collector import collect_external_universe_ohlcv
-from src.trading.automation import load_recommendation_universe, run_automation_cycle
+from src.trading.automation import load_recommendation_universe, run_recommendation_cycle
 from src.trading.order_queue import OrderQueue
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -36,7 +36,7 @@ def main() -> None:
     config = load_config(config_path)
     show_backtest = st.sidebar.checkbox("백테스트 보이기", value=False)
 
-    tab_names = ["보유 주식", "추천 항목", "리뷰 채팅"]
+    tab_names = ["보유 주식", "종가 기준 후보", "리뷰 채팅"]
     if show_backtest:
         tab_names.append("백테스트")
     tabs = st.tabs(tab_names)
@@ -44,7 +44,7 @@ def main() -> None:
 
     with tab_map["보유 주식"]:
         render_holdings_tab(config)
-    with tab_map["추천 항목"]:
+    with tab_map["종가 기준 후보"]:
         render_recommendation_tab(config)
     with tab_map["리뷰 채팅"]:
         render_chat_tab()
@@ -55,11 +55,11 @@ def main() -> None:
 
 def render_recommendation_tab(config: dict) -> None:
     automation = config.get("automation", {})
-    st.caption("추천 항목은 외부 OHLCV 데이터(yfinance/pykrx)와 유니버스 CSV 기준으로 분석합니다. KIS는 보유 종목 확인과 주문 단계에 사용합니다.")
+    st.caption("종가 기준 후보는 장마감 후 갱신된 OHLCV 데이터와 유니버스 CSV 기준으로 분석합니다. KIS는 보유 종목 확인과 주문 단계에 사용합니다.")
     st.warning("2단계 운영 방식: 시스템이 주문 제안을 만들고, 사용자가 수동 승인해야 주문 단계로 넘어갑니다.")
 
     cols = st.columns(4)
-    cols[0].metric("추천 분석", "켜짐" if automation.get("enabled") else "꺼짐")
+    cols[0].metric("종가 후보 분석", "가능")
     cols[1].metric("대상", "유니버스 CSV")
     cols[2].metric("수동 승인", "필수" if automation.get("manual_approval_required", True) else "아님")
     cols[3].metric("실주문 자동 실행", "비활성")
@@ -96,20 +96,26 @@ def render_recommendation_tab(config: dict) -> None:
             st.error(str(exc))
 
     queue = OrderQueue()
-    if st.button("저장된 데이터로 추천 분석 실행", type="primary"):
+    if st.button("저장된 데이터로 종가 후보 분석 실행", type="primary"):
         try:
-            candidates = run_automation_cycle(config, get_kis_broker(config))
-            queue.append_many(candidates)
+            candidates = run_recommendation_cycle(config)
+            queued_count = queue.append_many(candidates)
             if candidates:
-                st.success(f"추천 주문 {len(candidates)}건을 수동 승인 대기열에 추가했습니다.")
+                counts = pd.Series([candidate.market.upper() for candidate in candidates]).value_counts()
+                kr_count = int(counts.get("KR", 0))
+                us_count = int(counts.get("US", 0))
+                st.success(
+                    f"이번 종가 후보 {len(candidates)}건을 분석했습니다. "
+                    f"대기열 반영 {queued_count}건, 국내 {kr_count}건 / 미국 {us_count}건입니다."
+                )
             else:
-                st.info("현재 조건에 맞는 추천 항목이 없습니다.")
+                st.info("현재 조건에 맞는 종가 기준 후보가 없습니다.")
         except Exception as exc:
             st.error(str(exc))
 
     st.subheader("2단계: 수동 승인 주문")
     st.caption("주문 제안을 선택한 뒤 수동 승인 또는 거절을 기록합니다. 현재 승인 처리는 페이퍼 기록이며 실주문은 전송하지 않습니다.")
-    orders = queue.read_all()
+    orders = queue.read_pending()
     if not orders:
         st.info("승인 대기 중인 주문 제안이 없습니다.")
         return

@@ -20,13 +20,14 @@ class PriceBroker(Protocol):
 
 
 def run_automation_cycle(config: dict, broker: PriceBroker) -> list[OrderCandidate]:
+    automation = config.get("automation", {})
+    if not automation.get("enabled", False):
+        return []
     return run_recommendation_cycle(config)
 
 
 def run_recommendation_cycle(config: dict) -> list[OrderCandidate]:
     automation = config.get("automation", {})
-    if not automation.get("enabled", False):
-        return []
     if automation.get("mode") != "paper":
         raise RuntimeError("Only paper automation mode is allowed")
     if not automation.get("manual_approval_required", True):
@@ -59,7 +60,7 @@ def run_recommendation_cycle(config: dict) -> list[OrderCandidate]:
         market = market_map.get(symbol, "US")
         max_amount = float(automation["max_order_amount_krw"] if market == "KR" else automation["max_order_amount_usd"])
         price = float(row["close"])
-        quantity = max(1.0, float(int(max_amount // price))) if price > 0 else 0.0
+        quantity = float(int(max_amount // price)) if price > 0 else 0.0
         if quantity <= 0:
             continue
         orders.append(

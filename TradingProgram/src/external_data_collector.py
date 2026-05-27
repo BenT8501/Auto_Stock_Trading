@@ -53,7 +53,8 @@ def fetch_yfinance_ohlcv(symbols: list[str], start: str, end: str) -> pd.DataFra
 
     frames = []
     for symbol in symbols:
-        raw = yf.download(symbol, start=start, end=end, progress=False, auto_adjust=False)
+        yf_symbol = _to_yfinance_symbol(symbol)
+        raw = yf.download(yf_symbol, start=start, end=end, progress=False, auto_adjust=False)
         if raw.empty:
             continue
         if isinstance(raw.columns, pd.MultiIndex):
@@ -72,6 +73,10 @@ def fetch_yfinance_ohlcv(symbols: list[str], start: str, end: str) -> pd.DataFra
         frame["symbol"] = symbol
         frames.append(frame[["date", "symbol", "open", "high", "low", "close", "volume"]])
     return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+
+
+def _to_yfinance_symbol(symbol: str) -> str:
+    return symbol.replace(".", "-")
 
 
 def fetch_pykrx_ohlcv(symbols: list[str], start: str, end: str) -> pd.DataFrame:

@@ -4,12 +4,12 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.trading.automation import load_recommendation_universe, run_recommendation_cycle
+from src.trading.automation import load_recommendation_universe, run_automation_cycle, run_recommendation_cycle
 
 
 def test_automation_disabled_generates_no_orders() -> None:
     config = {"automation": {"enabled": False}}
-    assert run_recommendation_cycle(config) == []
+    assert run_automation_cycle(config, broker=None) == []
 
 
 def test_automation_requires_paper_mode() -> None:

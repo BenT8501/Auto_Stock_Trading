@@ -32,7 +32,7 @@ strategy:
     slope_period: 1
   volume:
     window: 20
-    multiplier: 1.0
+    multiplier: 1.2
   candle:
     body_avg_window: 20
   buy_patterns:
@@ -51,9 +51,9 @@ execution:
 
 risk:
   initial_cash: 10000000
-  max_positions: 1
-  position_size_pct: 0.10
-  max_new_positions_per_day: 1
+  max_positions: 10
+  position_size_pct: 0.05
+  max_new_positions_per_day: 2
   stop_loss_pct: -0.03
   take_profit_pct: 0.07
   market_allocation:
@@ -90,5 +90,57 @@ automation:
   scan_kr: true
   max_scan_us: 100
   max_scan_kr: 80
-  max_order_amount_krw: 100000
-  max_order_amount_usd: 100
+  max_order_amount_krw: 1000000
+  max_order_amount_usd: 1000
+
+realtime_monitor:
+  enabled: false
+  interval_minutes: 10
+  breakout_buffer_pct: 0.001
+  max_gap_up_pct: 0.03
+  manual_approval_required: true
+  max_candidates_per_cycle: 20
+
+watchlist:
+  output_dir: data/watchlist
+
+results:
+  output_dir: data/results
+
+realtime:
+  enabled: false
+  entry_delay_minutes:
+    KR: 10
+    US: 15
+  scan_interval_seconds: 600
+
+setup:
+  trigger_buffer_pct: 0.001
+  gap_limit_pct: 0.03
+
+order:
+  mode: paper
+  buy_order_type: limit
+  limit_price_basis: current_price
+  limit_price_buffer_pct: 0.001
+  allow_market_order: false
+
+notifications:
+  telegram:
+    enabled: false
+    bot_token_env: TELEGRAM_BOT_TOKEN
+    chat_id_env: TELEGRAM_CHAT_ID
+
+schedule:
+  timezone: Asia/Seoul
+  weekday_only: true
+  refresh:
+    KR:
+      enabled: true
+      local_time: "15:50"
+      buffer_minutes_after_close: 20
+    US:
+      enabled: true
+      market_timezone: America/New_York
+      market_close_time: "16:00"
+      buffer_minutes_after_close: 15

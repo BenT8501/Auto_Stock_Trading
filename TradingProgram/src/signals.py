@@ -10,13 +10,22 @@ def add_signals(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     volume_multiplier = float(config["strategy"]["volume"]["multiplier"])
     recent_buy_window = _recent_buy_signal_window(result, config)
 
-    trend_ok = (result["close"] > result["ma_long"]) & (result["ma_short_slope"] > 0)
-    volume_ok = result["volume"] >= result["volume_ma"] * volume_multiplier
+    trend_ok = (
+        (result["close"] > result["ma_short"])
+        & (result["ma_short"] > result["ma_long"])
+        & (result["ma_short_slope"] > 0)
+    )
+    volume_ok = result["volume"] > result["volume_ma"] * volume_multiplier
 
     buy_pattern_mask = result[buy_patterns].any(axis=1)
     sell_pattern_mask = result[sell_patterns].any(axis=1)
 
-    result["buy_signal"] = buy_pattern_mask & trend_ok & volume_ok & recent_buy_window
+    result["trend_filter_pass"] = trend_ok
+    result["volume_filter_pass"] = volume_ok
+    result["buy_pattern_signal"] = buy_pattern_mask
+    result["setup_signal"] = buy_pattern_mask & trend_ok & volume_ok & recent_buy_window
+    result["buy_signal"] = result["setup_signal"]
+    result["trigger_signal"] = False
     result["sell_signal"] = sell_pattern_mask | (result["close"] < result["ma_short"])
     result["buy_pattern"] = result.apply(lambda row: _first_true(row, buy_patterns), axis=1)
     result["sell_pattern"] = result.apply(lambda row: _first_true(row, sell_patterns), axis=1)

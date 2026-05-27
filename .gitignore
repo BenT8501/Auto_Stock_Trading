@@ -1,0 +1,9 @@
+TradingProgram/outputs/
+TradingProgram/data/processed/
+TradingProgram/data/results/
+TradingProgram/data/watchlist/
+TradingProgram/pytest-cache-files-*/
+TradingProgram/.pytest_cache/
+TradingProgram/__pycache__/
+TradingProgram/src/**/__pycache__/
+TradingProgram/tests/**/__pycache__/

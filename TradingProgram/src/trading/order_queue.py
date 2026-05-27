@@ -53,12 +53,23 @@ class OrderQueue:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
-    def append_many(self, orders: list[OrderCandidate]) -> None:
+    def append_many(self, orders: list[OrderCandidate]) -> int:
         if not orders:
-            return
-        with self.path.open("a", encoding="utf-8") as file:
-            for order in orders:
-                file.write(json.dumps(asdict(order), ensure_ascii=False) + "\n")
+            return 0
+        rows = self.read_all()
+        new_rows = [asdict(order) for order in orders]
+        new_pending_keys = {_order_key(row) for row in new_rows}
+        rows = [
+            row
+            for row in rows
+            if not (row.get("status") == "pending_approval" and _order_key(row) in new_pending_keys)
+        ]
+        deduped_new_rows: dict[tuple[str, str, str], dict[str, Any]] = {}
+        for row in new_rows:
+            deduped_new_rows[_order_key(row)] = row
+        rows.extend(deduped_new_rows.values())
+        self.replace_all(rows)
+        return len(deduped_new_rows)
 
     def read_all(self) -> list[dict[str, Any]]:
         if not self.path.exists():
@@ -68,6 +79,13 @@ class OrderQueue:
             if line.strip():
                 rows.append(json.loads(line))
         return rows
+
+    def read_pending(self) -> list[dict[str, Any]]:
+        pending: dict[tuple[str, str, str], dict[str, Any]] = {}
+        for row in self.read_all():
+            if row.get("status") == "pending_approval":
+                pending[_order_key(row)] = row
+        return list(pending.values())
 
     def replace_all(self, rows: list[dict[str, Any]]) -> None:
         with self.path.open("w", encoding="utf-8") as file:
@@ -84,3 +102,11 @@ class OrderQueue:
                 self.replace_all(rows)
                 return row
         raise KeyError(f"Order not found: {order_id}")
+
+
+def _order_key(row: dict[str, Any]) -> tuple[str, str, str]:
+    return (
+        str(row.get("market", "")).lower(),
+        str(row.get("symbol", "")).upper(),
+        str(row.get("side", "")).upper(),
+    )
