@@ -20,8 +20,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from review_agent.chat import answer
-
 
 @st.cache_resource
 def get_kis_broker(_config: dict) -> KisBroker:
@@ -36,7 +34,7 @@ def main() -> None:
     config = load_config(config_path)
     show_backtest = st.sidebar.checkbox("백테스트 보이기", value=False)
 
-    tab_names = ["보유 주식", "종가 기준 후보", "리뷰 채팅"]
+    tab_names = ["보유 주식", "종가 기준 후보"]
     if show_backtest:
         tab_names.append("백테스트")
     tabs = st.tabs(tab_names)
@@ -46,8 +44,6 @@ def main() -> None:
         render_holdings_tab(config)
     with tab_map["종가 기준 후보"]:
         render_recommendation_tab(config)
-    with tab_map["리뷰 채팅"]:
-        render_chat_tab()
     if show_backtest:
         with tab_map["백테스트"]:
             render_backtest_tab(config)
@@ -261,26 +257,6 @@ def render_metrics(metrics: dict) -> None:
     cols[2].metric("최대낙폭 %", f"{metrics.get('max_drawdown_pct', 0):.2f}")
     cols[3].metric("거래 수", metrics.get("trade_count", 0))
     cols[4].metric("승률 %", f"{metrics.get('win_rate_pct', 0):.2f}")
-
-
-def render_chat_tab() -> None:
-    st.caption("로컬 프로젝트 파일 기준으로 답합니다. 투자 추천이나 수익 보장은 하지 않습니다.")
-    if "review_chat_messages" not in st.session_state:
-        st.session_state.review_chat_messages = [
-            {"role": "assistant", "content": "질문을 입력하세요. 예: `리스크 알려줘`, `실거래 가능해?`"}
-        ]
-    for message in st.session_state.review_chat_messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-    prompt = st.chat_input("리뷰 에이전트에게 질문")
-    if prompt:
-        st.session_state.review_chat_messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        response = answer(prompt, PROJECT_ROOT)
-        st.session_state.review_chat_messages.append({"role": "assistant", "content": response})
-        with st.chat_message("assistant"):
-            st.markdown(response)
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ class Position:
     entry_price: float
     stop_loss_price: float
     take_profit_price: float
+    name: str = ""
 
 
 class PositionManager:

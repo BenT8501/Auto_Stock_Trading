@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import pandas as pd
 from datetime import datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from src.trading.realtime_scanner import Quote, evaluate_trigger
+from src.trading.realtime_scanner import Quote, evaluate_trigger, update_realtime_status
 
 
 def _config() -> dict:
@@ -65,3 +66,14 @@ def test_evaluate_trigger_rejects_entry_delay() -> None:
 
     assert result["trigger_signal"] is False
     assert result["trigger_reason"] == "entry_delay_not_elapsed"
+
+
+def test_update_realtime_status_writes_status_file() -> None:
+    watchlist = pd.DataFrame([{"symbol": "AAA"}])
+    triggered = pd.DataFrame([{"symbol": "AAA", "trigger_signal": True}])
+
+    status = update_realtime_status({}, watchlist, triggered, watch_date=datetime(2026, 5, 29).date())
+
+    assert status.loc[0, "watchlist_count"] == 1
+    assert status.loc[0, "triggered_count"] == 1
+    assert Path("data/logs/realtime_status_2026-05-29.csv").exists()

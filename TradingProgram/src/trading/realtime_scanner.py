@@ -46,6 +46,22 @@ def load_watchlist(config: dict, watch_date: date | None = None, market: str | N
     return watchlist.reset_index(drop=True)
 
 
+def load_today_watchlist(config: dict, trade_date: str | None = None, market: str | None = None) -> pd.DataFrame:
+    parsed_date = date.fromisoformat(trade_date) if trade_date else None
+    return load_watchlist(config, watch_date=parsed_date, market=market)
+
+
+def calculate_trigger_prices(df: pd.DataFrame, config: dict) -> pd.DataFrame:
+    result = df.copy()
+    setup = config.get("setup", {})
+    trigger_buffer = float(setup.get("trigger_buffer_pct", config.get("execution", {}).get("breakout_buffer_pct", 0.001)))
+    gap_limit = float(setup.get("gap_limit_pct", config.get("execution", {}).get("max_gap_up_pct", 0.03)))
+    high_column = "prev_high" if "prev_high" in result.columns else "high"
+    result["trigger_price"] = result[high_column].astype(float) * (1 + trigger_buffer)
+    result["gap_limit_price"] = result[high_column].astype(float) * (1 + gap_limit)
+    return result
+
+
 def scan_watchlist_once(
     config: dict,
     broker: ScannerBroker,
@@ -57,7 +73,9 @@ def scan_watchlist_once(
 ) -> pd.DataFrame:
     watchlist = load_watchlist(config, watch_date=watch_date, market=market)
     if watchlist.empty:
-        return _empty_triggered_frame()
+        triggered = _empty_triggered_frame()
+        update_realtime_status(config, watchlist, triggered, watch_date=watch_date)
+        return triggered
 
     rows = []
     position_manager = position_manager or PositionManager()
@@ -97,6 +115,7 @@ def scan_watchlist_once(
     output_dir.mkdir(parents=True, exist_ok=True)
     output_date = watch_date or date.today()
     triggered.to_csv(output_dir / f"triggered_candidates_{output_date.isoformat()}.csv", index=False)
+    update_realtime_status(config, watchlist, triggered, watch_date=output_date)
     return triggered
 
 
@@ -129,6 +148,38 @@ def evaluate_trigger(
         }
     )
     return result
+
+
+def evaluate_trigger_signal(row: pd.Series, current_price: float, today_open: float, now: datetime | None, config: dict) -> dict[str, Any]:
+    return evaluate_trigger(row, Quote(current_price=current_price, open_price=today_open), config, now=now)
+
+
+def update_realtime_status(
+    config: dict,
+    watchlist_status: pd.DataFrame,
+    triggered: pd.DataFrame | None = None,
+    *,
+    watch_date: date | None = None,
+) -> pd.DataFrame:
+    output_dir = Path("data/logs")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_date = watch_date or date.today()
+    triggered_count = 0 if triggered is None else len(triggered)
+    now = datetime.now().isoformat(timespec="seconds")
+    status = pd.DataFrame(
+        [
+            {
+                "timestamp": now,
+                "watch_date": output_date.isoformat(),
+                "watchlist_count": len(watchlist_status),
+                "triggered_count": triggered_count,
+                "last_price_check_at": now,
+                "last_status_refresh_at": now,
+            }
+        ]
+    )
+    status.to_csv(output_dir / f"realtime_status_{output_date.isoformat()}.csv", index=False)
+    return status
 
 
 def _risk_allows_trigger(config: dict, *, current_positions: int, daily_buys: int) -> bool:

@@ -18,7 +18,9 @@ class PaperOrder:
     quantity: float
     reference_price: float
     reason: str
+    name: str = ""
     status: str = "paper_created"
+    dedupe_key: str = ""
 
 
 class OrderManagerBase:
@@ -43,16 +45,26 @@ class PaperOrderManager(OrderManagerBase):
         quantity: float,
         reference_price: float,
         reason: str,
+        name: str = "",
+        dedupe_key: str = "",
     ) -> PaperOrder:
+        if dedupe_key:
+            existing = self.find_by_dedupe_key(dedupe_key)
+            if existing is not None:
+                fields = PaperOrder.__dataclass_fields__
+                return PaperOrder(**{key: existing[key] for key in fields if key in existing})
+
         order = PaperOrder(
             id=str(uuid.uuid4()),
             created_at=datetime.now(timezone.utc).isoformat(),
             market=market,
             symbol=symbol,
+            name=name,
             side=side,
             quantity=quantity,
             reference_price=reference_price,
             reason=reason,
+            dedupe_key=dedupe_key,
         )
         with self.path.open("a", encoding="utf-8") as file:
             file.write(json.dumps(asdict(order), ensure_ascii=False) + "\n")
@@ -62,6 +74,7 @@ class PaperOrderManager(OrderManagerBase):
         return self.create_order(
             market="",
             symbol=symbol,
+            name=symbol,
             side="BUY",
             quantity=quantity,
             reference_price=limit_price,
@@ -72,6 +85,7 @@ class PaperOrderManager(OrderManagerBase):
         return self.create_order(
             market="",
             symbol=symbol,
+            name=symbol,
             side="SELL",
             quantity=quantity,
             reference_price=float(limit_price or 0),
@@ -86,6 +100,12 @@ class PaperOrderManager(OrderManagerBase):
             if line.strip():
                 rows.append(json.loads(line))
         return rows
+
+    def find_by_dedupe_key(self, dedupe_key: str) -> dict[str, Any] | None:
+        for row in self.read_all():
+            if row.get("dedupe_key") == dedupe_key:
+                return row
+        return None
 
 
 def calculate_limit_price(trigger_price: float, current_price: float, config: dict) -> float:

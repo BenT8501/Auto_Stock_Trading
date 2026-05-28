@@ -7,3 +7,4 @@ TradingProgram/.pytest_cache/
 TradingProgram/__pycache__/
 TradingProgram/src/**/__pycache__/
 TradingProgram/tests/**/__pycache__/
+TradingProgram/test_artifacts/

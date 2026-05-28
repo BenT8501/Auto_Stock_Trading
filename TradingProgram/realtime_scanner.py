@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 from src.broker.kis import KisBroker
 from src.config import load_config
 from src.trading.notifier import CompositeNotifier
-from src.trading.realtime_scanner import load_watchlist, scan_watchlist_once
+from src.trading.realtime_scanner import load_watchlist, scan_watchlist_once, update_realtime_status
 
 
 def main() -> None:
@@ -32,16 +32,28 @@ def main() -> None:
 
     broker = KisBroker.from_config(config)
     notifier = CompositeNotifier.from_config(config)
-    interval_minutes = int(config.get("realtime_monitor", {}).get("interval_minutes", 10))
+    realtime = config.get("realtime", {})
+    price_scan_interval_seconds = int(realtime.get("price_scan_interval_seconds", 10))
+    status_refresh_interval_minutes = int(realtime.get("status_refresh_interval_minutes", 10))
 
     if args.once:
         _run_cycle(config, broker, notifier, watch_date, args.market)
         return
 
-    print(f"Realtime scanner started. market={args.market}, interval_minutes={interval_minutes}")
+    print(
+        "Realtime scanner started. "
+        f"market={args.market}, price_scan_interval_seconds={price_scan_interval_seconds}, "
+        f"status_refresh_interval_minutes={status_refresh_interval_minutes}"
+    )
+    last_status_refresh = 0.0
     while True:
         _run_cycle(config, broker, notifier, watch_date, args.market)
-        time.sleep(interval_minutes * 60)
+        now = time.time()
+        if now - last_status_refresh >= status_refresh_interval_minutes * 60:
+            watchlist = load_watchlist(config, watch_date=watch_date, market=args.market)
+            update_realtime_status(config, watchlist, watch_date=watch_date)
+            last_status_refresh = now
+        time.sleep(price_scan_interval_seconds)
 
 
 def _run_cycle(config: dict, broker: KisBroker, notifier: CompositeNotifier, watch_date: date | None, market: str) -> None:

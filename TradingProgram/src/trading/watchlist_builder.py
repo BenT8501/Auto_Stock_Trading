@@ -57,7 +57,7 @@ def prepare_universe_signals(config: dict) -> pd.DataFrame:
         return pd.DataFrame()
 
     prepared = add_signals(add_patterns(add_indicators(ohlcv, config)), config)
-    metadata_columns = ["symbol", "name", "market", "exchange"]
+    metadata_columns = ["symbol", "name", "market", "rank", "exchange"]
     metadata = universe[[column for column in metadata_columns if column in universe.columns]].copy()
     return prepared.merge(metadata, on="symbol", how="left", suffixes=("", "_universe"))
 

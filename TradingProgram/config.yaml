@@ -112,7 +112,16 @@ realtime:
   entry_delay_minutes:
     KR: 10
     US: 15
-  scan_interval_seconds: 600
+  price_scan_interval_seconds: 600
+  status_refresh_interval_minutes: 10
+  rebuild_setup_intraday: false
+
+desktop_automation:
+  enabled: false
+  interval_minutes: 10
+  available_buy_amount: 1000000
+  auto_buy: false
+  auto_sell: false
 
 setup:
   trigger_buffer_pct: 0.001
@@ -130,6 +139,28 @@ notifications:
     enabled: false
     bot_token_env: TELEGRAM_BOT_TOKEN
     chat_id_env: TELEGRAM_CHAT_ID
+
+chat:
+  enabled: false
+  provider: mock
+  mode: local
+  model: mock
+  ollama_base_url: "http://localhost:11434"
+  timeout_seconds: 60
+  allow_order_execution: false
+  max_tool_calls: 3
+
+manual_search:
+  enabled: true
+  default_market: ALL
+  latest_only: true
+  max_results: 50
+
+agent_safety:
+  block_real_order_tools: true
+  require_user_confirmation_for_order: true
+  hide_api_keys: true
+  answer_as_condition_based_analysis: true
 
 schedule:
   timezone: Asia/Seoul
