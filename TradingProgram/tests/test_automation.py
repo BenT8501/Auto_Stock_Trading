@@ -5,6 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.trading.automation import (
+    _calculate_order_quantity,
     build_trigger_candidates,
     filter_trending_stocks,
     load_recommendation_universe,
@@ -156,3 +157,33 @@ def test_build_trigger_candidates_loads_latest_file() -> None:
 
     assert len(result) == 1
     assert result.loc[0, "symbol"] == "AAA"
+
+
+def test_order_quantity_uses_fixed_amount_quantity_or_equity_pct() -> None:
+    base = {
+        "risk": {"initial_cash": 10_000_000},
+        "automation": {
+            "max_order_amount_krw": 1_000_000,
+            "max_order_amount_usd": 1_000,
+        },
+    }
+
+    assert _calculate_order_quantity(70_000, "KR", base) == 14
+
+    fixed_quantity = {
+        **base,
+        "automation": {**base["automation"], "order_sizing": {"mode": "fixed_quantity", "quantity": 3}},
+    }
+    assert _calculate_order_quantity(70_000, "KR", fixed_quantity) == 3
+
+    equity_pct = {
+        **base,
+        "automation": {**base["automation"], "order_sizing": {"mode": "equity_pct", "equity_pct": 5}},
+    }
+    assert _calculate_order_quantity(70_000, "KR", equity_pct) == 7
+
+    fixed_amount = {
+        **base,
+        "automation": {**base["automation"], "order_sizing": {"mode": "fixed_amount", "amount_usd": 950}},
+    }
+    assert _calculate_order_quantity(100, "US", fixed_amount) == 9

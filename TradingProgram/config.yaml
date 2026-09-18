@@ -18,6 +18,22 @@ universe:
   us_file: data/universe/us_top100.csv
   kr_file: data/universe/kr_top80.csv
 
+etf:
+  symbols:
+    - SPY
+    - QQQ
+    - VTI
+    - IWM
+    - XLK
+    - SMH
+    - XLF
+    - XLE
+    - XLV
+    - "069500"
+    - "133690"
+    - "381180"
+    - "229200"
+
 strategy:
   use_market_filter: false
   data_window:
@@ -36,12 +52,18 @@ strategy:
   candle:
     body_avg_window: 20
   buy_patterns:
+    - piercing_line
     - hammer
     - bullish_engulfing
     - morning_star
+    - inverted_hammer
+    - tweezer_bottom
   sell_patterns:
+    - dark_cloud_cover
+    - evening_star
     - bearish_engulfing
     - shooting_star
+    - tweezer_top
 
 execution:
   breakout_buffer_pct: 0.001

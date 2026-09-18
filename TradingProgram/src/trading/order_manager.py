@@ -7,6 +7,9 @@ from typing import Any
 import json
 import uuid
 
+from src.broker.paper import PaperBroker
+from src.trading.order_queue import OrderQueue
+
 
 @dataclass(frozen=True)
 class PaperOrder:
@@ -129,3 +132,36 @@ def calculate_quantity(limit_price: float, total_equity: float, config: dict) ->
 class BrokerOrderManager(OrderManagerBase):
     def create_order(self, *_args: Any, **_kwargs: Any) -> None:
         raise NotImplementedError("Real broker order submission is TODO and intentionally disabled.")
+
+
+def approve_paper_order(
+    queue: OrderQueue,
+    order_id: str,
+    broker: PaperBroker,
+    note: str = "manual approval filled by paper broker",
+) -> dict[str, Any]:
+    rows = queue.read_all()
+    selected = next((row for row in rows if row.get("id") == order_id), None)
+    if selected is None:
+        raise KeyError(f"Order not found: {order_id}")
+    if selected.get("status") != "pending_approval":
+        raise RuntimeError(f"Only pending orders can be approved: {order_id}")
+
+    fill = broker.submit_order(selected)
+    updated = queue.update_status(order_id, "filled_paper", note)
+    updated["paper_fill_id"] = fill.get("id")
+    updated["paper_fill_status"] = fill.get("status")
+    rows = queue.read_all()
+    for row in rows:
+        if row.get("id") == order_id:
+            row.update(
+                {
+                    "paper_fill_id": fill.get("id"),
+                    "paper_fill_status": fill.get("status"),
+                    "filled_price": fill.get("price"),
+                    "filled_quantity": fill.get("quantity"),
+                }
+            )
+            break
+    queue.replace_all(rows)
+    return updated

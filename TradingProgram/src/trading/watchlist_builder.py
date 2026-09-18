@@ -20,7 +20,7 @@ def build_watchlist(config: dict, run_date: date | None = None, market: str | No
         latest = latest[latest["market"].astype(str).str.upper() == market.upper()]
 
     trend_candidates = latest[latest["trend_filter_pass"].astype(bool) & latest["volume_filter_pass"].astype(bool)].copy()
-    setup_candidates = latest[latest["setup_signal"].astype(bool)].copy()
+    setup_candidates = latest[latest["candidate_grade"].astype(str) != "NONE"].copy()
     watchlist = _build_watchlist_frame(setup_candidates, config, run_date)
 
     watchlist_dir = Path(config.get("watchlist", {}).get("output_dir", "data/watchlist"))
@@ -88,6 +88,16 @@ def _build_watchlist_frame(setup_candidates: pd.DataFrame, config: dict, run_dat
                 "take_profit_price",
                 "setup_signal",
                 "trigger_signal",
+                "candidate_grade",
+                "candidate_reason",
+                "bb_signal_summary",
+                "bb_position",
+                "bb_width",
+                "is_bb_upper_breakout",
+                "is_bb_upper_near",
+                "is_bb_squeeze",
+                "is_bb_squeeze_breakout",
+                "is_bb_width_expanding",
             ]
         )
 
@@ -123,6 +133,22 @@ def _build_watchlist_frame(setup_candidates: pd.DataFrame, config: dict, run_dat
             "take_profit_price": setup_candidates["high"].astype(float) * (1 + breakout_buffer) * (1 + take_profit_pct),
             "setup_signal": True,
             "trigger_signal": False,
+            "candidate_grade": setup_candidates.get("candidate_grade", ""),
+            "candidate_reason": setup_candidates.get("candidate_reason", ""),
+            "bb_signal_summary": _column_or_default(setup_candidates, "bb_signal_summary", ""),
+            "bb_position": _column_or_default(setup_candidates, "bb_position", 0).astype(float),
+            "bb_width": _column_or_default(setup_candidates, "bb_width", 0).astype(float),
+            "is_bb_upper_breakout": _column_or_default(setup_candidates, "is_bb_upper_breakout", False),
+            "is_bb_upper_near": _column_or_default(setup_candidates, "is_bb_upper_near", False),
+            "is_bb_squeeze": _column_or_default(setup_candidates, "is_bb_squeeze", False),
+            "is_bb_squeeze_breakout": _column_or_default(setup_candidates, "is_bb_squeeze_breakout", False),
+            "is_bb_width_expanding": _column_or_default(setup_candidates, "is_bb_width_expanding", False),
         }
     )
     return result.sort_values(["market", "symbol"]).reset_index(drop=True)
+
+
+def _column_or_default(frame: pd.DataFrame, column: str, default: object) -> pd.Series:
+    if column in frame.columns:
+        return frame[column]
+    return pd.Series(default, index=frame.index)

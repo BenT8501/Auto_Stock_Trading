@@ -54,13 +54,12 @@ def run_recommendation_cycle(config: dict) -> list[OrderCandidate]:
 
     orders: list[OrderCandidate] = []
     for _, row in latest_rows.iterrows():
-        if not bool(row.get("buy_signal", False)):
+        if str(row.get("candidate_grade", "NONE")) != "A":
             continue
         symbol = str(row["symbol"])
         market = market_map.get(symbol, "US")
-        max_amount = float(automation["max_order_amount_krw"] if market == "KR" else automation["max_order_amount_usd"])
         price = float(row["close"])
-        quantity = float(int(max_amount // price)) if price > 0 else 0.0
+        quantity = _calculate_order_quantity(price, market, config)
         if quantity <= 0:
             continue
         orders.append(
@@ -71,11 +70,46 @@ def run_recommendation_cycle(config: dict) -> list[OrderCandidate]:
                 side="BUY",
                 quantity=quantity,
                 reference_price=price,
-                reason=f"buy_signal={row.get('buy_pattern', '')}; close>MA trend and volume filter passed",
+                reason=(
+                    str(row.get("candidate_reason") or f"A Grade: {row.get('buy_pattern', '')}; trend and volume passed")
+                    + f"; order_sizing={_order_sizing_label(config, market)}"
+                ),
             )
         )
 
     return orders
+
+
+def _calculate_order_quantity(price: float, market: str, config: dict) -> float:
+    if price <= 0:
+        return 0.0
+
+    automation = config.get("automation", {})
+    sizing = automation.get("order_sizing", {})
+    mode = str(sizing.get("mode", "fixed_amount"))
+    if mode == "fixed_quantity":
+        return float(int(float(sizing.get("quantity", 0))))
+    if mode == "equity_pct":
+        initial_cash = float(config.get("risk", {}).get("initial_cash", 0))
+        pct = float(sizing.get("equity_pct", 0)) / 100
+        return float(int((initial_cash * pct) // price))
+
+    amount_key = "amount_krw" if market == "KR" else "amount_usd"
+    fallback_amount = automation.get("max_order_amount_krw" if market == "KR" else "max_order_amount_usd", 0)
+    amount = float(sizing.get(amount_key, fallback_amount))
+    return float(int(amount // price))
+
+
+def _order_sizing_label(config: dict, market: str) -> str:
+    sizing = config.get("automation", {}).get("order_sizing", {})
+    mode = str(sizing.get("mode", "fixed_amount"))
+    if mode == "fixed_quantity":
+        return f"fixed_quantity {float(sizing.get('quantity', 0)):g}"
+    if mode == "equity_pct":
+        return f"equity_pct {float(sizing.get('equity_pct', 0)):g}%"
+    amount_key = "amount_krw" if market == "KR" else "amount_usd"
+    fallback_amount = config.get("automation", {}).get("max_order_amount_krw" if market == "KR" else "max_order_amount_usd", 0)
+    return f"fixed_amount {float(sizing.get(amount_key, fallback_amount)):g} {market}"
 
 
 def filter_trending_stocks(config: dict, market: str | None = None) -> pd.DataFrame:

@@ -12,6 +12,7 @@ from src.external_data_collector import collect_external_universe_ohlcv
 from src.search.manual_search import has_meaningful_filter, search_by_conditions
 from src.search.query_parser import parse_search_query
 from src.trading.notifier import CompositeNotifier
+from src.trading.automation import _calculate_order_quantity, _order_sizing_label
 from src.trading.order_manager import PaperOrder, PaperOrderManager
 from src.trading.position_manager import Position, PositionManager
 from src.trading.watchlist_builder import build_watchlist
@@ -56,8 +57,10 @@ def run_desktop_automation_cycle(
     buy_orders: list[PaperOrder] = []
     duplicate_count = 0
     if auto_buy:
+        buy_rows = _order_candidate_rows(filtered)
         buy_orders, duplicate_count = _create_paper_buy_orders(
-            filtered,
+            buy_rows,
+            config=config,
             order_manager=order_manager,
             position_manager=position_manager,
             available_buy_amount=available_buy_amount,
@@ -85,7 +88,8 @@ def run_desktop_automation_cycle(
     )
     message = (
         f"자동 감시 완료: 갱신 {refreshed_rows}행, 감시 {len(watchlist)}건, "
-        f"조건 통과 {len(filtered)}건, paper 매수 {len(buy_orders)}건, 중복 제외 {duplicate_count}건"
+        f"조건 통과 {len(filtered)}건, A등급 {len(_order_candidate_rows(filtered))}건, "
+        f"paper 매수 {len(buy_orders)}건, 중복 제외 {duplicate_count}건"
     )
     if auto_sell:
         message += f", paper 매도 {len(sell_orders)}건"
@@ -125,15 +129,23 @@ def _apply_search_filter(config: dict, watchlist: pd.DataFrame, search_query: st
     return filtered.reset_index(drop=True)
 
 
+def _order_candidate_rows(rows: pd.DataFrame) -> pd.DataFrame:
+    if rows.empty or "candidate_grade" not in rows.columns:
+        return rows
+    return rows[rows["candidate_grade"].astype(str) == "A"].reset_index(drop=True)
+
+
 def _create_paper_buy_orders(
     rows: pd.DataFrame,
     *,
+    config: dict,
     order_manager: PaperOrderManager,
     position_manager: PositionManager,
     available_buy_amount: float,
     run_date: date,
 ) -> tuple[list[PaperOrder], int]:
-    if rows.empty or available_buy_amount <= 0:
+    use_order_sizing = bool(config.get("automation", {}).get("order_sizing"))
+    if rows.empty or (not use_order_sizing and available_buy_amount <= 0):
         return [], 0
 
     remaining = float(available_buy_amount)
@@ -141,13 +153,15 @@ def _create_paper_buy_orders(
     duplicates = 0
     for _, row in rows.sort_values(["market", "symbol"]).iterrows():
         price = _number(row.get("trigger_price") or row.get("prev_close"))
-        if price <= 0 or remaining < price:
+        if price <= 0:
             continue
-        quantity = int(remaining // price)
+        market = str(row.get("market", "")).upper()
+        quantity = int(_calculate_order_quantity(price, market, config)) if use_order_sizing else int(remaining // price)
         if quantity <= 0:
             continue
+        if not use_order_sizing and remaining < quantity * price:
+            continue
 
-        market = str(row.get("market", "")).upper()
         symbol = str(row.get("symbol", "")).upper()
         name = str(row.get("name", symbol))
         dedupe_key = f"{run_date.isoformat()}:{market}:{symbol}:BUY"
@@ -159,7 +173,7 @@ def _create_paper_buy_orders(
             side="BUY",
             quantity=float(quantity),
             reference_price=price,
-            reason="desktop_auto_buy_setup_condition_paper_only",
+            reason=f"desktop_auto_buy_a_grade_paper_only; {_order_sizing_label(config, market)}",
             dedupe_key=dedupe_key,
         )
         if existed:
@@ -178,7 +192,8 @@ def _create_paper_buy_orders(
                     take_profit_price=_number(row.get("take_profit_price")),
                 )
             )
-        remaining -= quantity * price
+        if not use_order_sizing:
+            remaining -= quantity * price
     return created, duplicates
 
 
