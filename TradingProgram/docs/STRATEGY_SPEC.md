@@ -4,14 +4,20 @@ The v1 strategy combines raw candlestick patterns with trend and volume filters.
 
 Buy patterns:
 
+- piercing line
 - hammer
 - bullish engulfing
 - morning star
+- inverted hammer
+- tweezer bottom
 
 Sell patterns:
 
+- dark cloud cover
+- evening star
 - bearish engulfing
 - shooting star
+- tweezer top
 
 Filters:
 

@@ -63,6 +63,59 @@ def test_desktop_automation_creates_paper_buy_once(monkeypatch) -> None:
     assert len(manager.read_all()) == 1
 
 
+def test_desktop_automation_auto_buy_only_uses_a_grade_and_order_sizing(monkeypatch) -> None:
+    watchlist = pd.DataFrame(
+        [
+            {
+                "market": "KR",
+                "symbol": "005930",
+                "name": "Samsung Electronics",
+                "trigger_price": 70000,
+                "candidate_grade": "A",
+                "setup_signal": True,
+            },
+            {
+                "market": "KR",
+                "symbol": "000660",
+                "name": "SK Hynix",
+                "trigger_price": 100000,
+                "candidate_grade": "C",
+                "setup_signal": True,
+            },
+        ]
+    )
+    monkeypatch.setattr(
+        desktop_automation,
+        "build_watchlist",
+        lambda *_args, **_kwargs: {"watchlist": watchlist},
+    )
+    output_dir = Path("outputs/test_desktop_automation")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    order_manager = PaperOrderManager(output_dir / f"paper_orders_{uuid.uuid4().hex}.jsonl")
+    position_manager = PositionManager(output_dir / f"paper_positions_{uuid.uuid4().hex}.json")
+    config = {
+        "results": {"output_dir": str(output_dir)},
+        "automation": {"order_sizing": {"mode": "fixed_quantity", "quantity": 2}},
+    }
+
+    result = desktop_automation.run_desktop_automation_cycle(
+        config,
+        available_buy_amount=0,
+        auto_buy=True,
+        refresh_data=False,
+        run_date=date(2026, 5, 29),
+        order_manager=order_manager,
+        position_manager=position_manager,
+        notify=False,
+    )
+
+    rows = order_manager.read_all()
+    assert result.buy_orders_created == 1
+    assert rows[0]["symbol"] == "005930"
+    assert rows[0]["quantity"] == 2
+    assert "fixed_quantity" in rows[0]["reason"]
+
+
 def test_desktop_automation_creates_paper_sell_for_exit_candidate(monkeypatch) -> None:
     monkeypatch.setattr(
         desktop_automation,

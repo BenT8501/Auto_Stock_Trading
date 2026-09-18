@@ -9,7 +9,14 @@ REQUIRED_OHLCV_COLUMNS = ["date", "symbol", "open", "high", "low", "close", "vol
 
 
 def load_ohlcv_csv(path: str | Path) -> pd.DataFrame:
-    df = pd.read_csv(path)
+    csv_path = Path(path)
+    if not csv_path.exists():
+        raise FileNotFoundError(
+            f"OHLCV CSV file not found: {csv_path}. "
+            "Run `python collect_ohlcv.py` or `python collect_external_ohlcv.py` first, "
+            "or update data.universe_ohlcv_file in config.yaml."
+        )
+    df = pd.read_csv(csv_path)
     return normalize_ohlcv(df)
 
 
