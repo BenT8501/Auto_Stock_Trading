@@ -1,7 +1,7 @@
 ﻿# Project_Z 멀티플레이 기초 학습 및 재사용 범위
 
 - 작성일: 2026-09-30
-- 갱신일: 2026-10-01
+- 갱신일: 2026-10-06
 - 관련 문서: [직무 과제 계획서](박종호B_직무과제계획서.md)
 - 상태: 학습 범위 및 재사용 방침 초안 작성 완료. 간단한 Server RPC·상태 복제 테스트 완료(사용자 확인 보고). 코드 검토, 전체 학습 검증 및 재사용 범위 확정은 미완료.
 
@@ -55,7 +55,13 @@ Reliable은 정상 연결과 유효한 호출 조건에서 전달 신뢰성을 �
 
 ### 학습 완료 기준
 
-- [ ] 위 6개 개념을 자신의 구현 흐름과 연결해 설명
+- [x] 호스트·게스트의 서버 요청 및 복제 실행 흐름 학습
+- [x] Authority와 로컬 제어의 차이 학습 및 로그 확인
+- [x] Ownership 기본 개념 및 Owner·Controller 로그 비교
+- [x] RPC 종류·신뢰성 기본 설명 학습 및 Server RPC 실습
+- [x] Replication·RepNotify 및 DOREPLIFETIME의 역할 학습(사용자 이해 확인)
+- [ ] Client·NetMulticast RPC 개별 실습 및 비소유 호출 예외 검증(현재 미실시)
+- [ ] 클래스 역할·상태 수명을 실제 프로젝트에 적용하여 설명
 - [x] 서버·클라이언트 로그와 값 정상 여부 확인(사용자 보고)
 - [ ] 실제 로그 파일 또는 캡처 첨부
 - [x] Server RPC 및 복제 값 변경 테스트 성공
@@ -145,7 +151,7 @@ PlayerController / Character
 - 대상: ZCharacterBaseMulti / BP_ZMultiCharacter
 - 환경: 에디터의 2인 Listen Server 테스트
 - 결과: **간단한 서버 값 변경 테스트 완료**
-- 근거: 사용자가 [Input], [ServerChanged], [OnRep] 세 로그와 값의 정상 반영을 확인했다고 보고했습니다. 실제 소스 및 로그 원본은 본 문서에 첨부되지 않았으며, 아래 함수명과 예시는 안내한 코드 기준입니다.
+- 근거: 사용자가 [Input], [ServerChanged], [OnRep] 세 로그와 값의 정상 반영을 확인했다고 보고했습니다. 실제 소스 및 로그 파일 원본은 첨부되지 않았으며, 아래 함수명과 예시는 안내한 코드 기준입니다. 이후 사용자가 전달한 Ownership 로그의 주요 필드는 9절에 별도로 정리했습니다.
 
 ### 처리 순서
 
@@ -202,3 +208,38 @@ OnRep_TestValue() / [OnRep]
 - 6인 및 패킷 손실 환경 통합 검증
 
 테스트의 무조건 +1 처리는 학습용입니다. 실제 전투에서는 서버가 발사 조건과 명중을 검증한 뒤 체력·탄약을 변경하도록 확장합니다.
+
+## 9. 2026-10-06 진행 점검
+
+### Ownership 로그 확인 결과
+
+사용자가 대화에 전달한 로그를 요약했습니다. 호스트 요청의 OnRep Local 값은 사용자가 정정한 0을 반영했습니다. Controller 번호는 로그 이름의 접미사이며 전역 플레이어 ID가 아닙니다.
+
+| 요청자 | 단계 | Authority | Local | Owner / Controller | OwnerOfOwner | Value |
+|---|---|---|---|---|---|---|
+| 호스트 | 입력 | 1 | 1 | PlayerController_0 | None | 0 |
+| 호스트 | 서버 변경 | 1 | 1 | PlayerController_0 | None | 1 |
+| 호스트 | 게스트의 OnRep | 0 | 0 | None | None | 1 |
+| 게스트 | 입력 | 0 | 1 | PlayerController_0 | None | 0 |
+| 게스트 | 서버 변경 | 1 | 0 | PlayerController_1 | None | 1 |
+| 게스트 | 게스트의 OnRep | 0 | 1 | PlayerController_0 | None | 1 |
+
+- 서버는 호스트·게스트 캐릭터 모두에 Authority를 가집니다.
+- 일반적인 빙의된 Character의 Owner와 Controller가 PlayerController를 가리키는 것을 확인했습니다.
+- 게스트에는 호스트의 PlayerController가 없어 호스트 캐릭터 복제본의 Owner·Controller가 None으로 표시될 수 있습니다. 서버의 소유 관계가 사라졌다는 뜻은 아닙니다.
+- 게스트의 로컬 Controller_0과 서버의 Controller_1은 서로 다른 월드의 대응 객체입니다.
+
+### 이번에 정리한 개념
+
+- Ownership은 Actor의 소유 관계이며, 소유 연결을 판단하여 RPC 전달 및 소유자 조건 복제에 사용합니다.
+- 게스트는 테스트 값을 먼저 바꾸지 않고 Server RPC 요청만 보냅니다.
+- 서버의 _Implementation에서 값을 변경합니다.
+- DOREPLIFETIME은 복제 대상 등록이며 변수 대입 코드가 아닙니다.
+- 엔진의 복제 수신 처리가 클라이언트 변수를 갱신한 후 OnRep를 실행합니다.
+- ReplicatedUsing은 복제 변경 알림 함수를 연결합니다. OnRep는 RPC 응답 함수가 아닙니다.
+
+### 현재 도달한 단계
+
+기본 접속·FPS 조작·이동 동기화와 테스트용 Server RPC·상태 복제는 확인했습니다. 서버·클라이언트, Authority, Ownership, RPC, Replication·RepNotify의 기본 설명을 진행했으며, 개념 학습 완료와 모든 예외 조건의 구현 검증은 구분합니다.
+
+다음은 클래스별 역할·상태 저장 위치·수명 설계와 기존 전투 코드의 재사용 범위 확정입니다. 체력·탄약·전투·사망·리스폰·팀 기능 및 6인 통합 검증은 아직 완료하지 않았습니다.
