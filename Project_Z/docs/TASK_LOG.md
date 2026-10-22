@@ -41,3 +41,12 @@
 - 검증: 업로드 중 추가된 원격 `e8fda3b`까지 확인. UI 표시는 사용자 확인. 코드상 PlayerState 검사 반전, B팀 색상 대상 오류, 준비 검사 미연결 등을 기록. 빌드·PIE 미실행.
 - 소스 및 에셋 변경 없음.
 - 다음 작업: 기록된 코드 오류 수정 → 준비 검사 및 버튼 동작 확인 → 서버 요청/결과/재시도 연결.
+
+
+LogTemp: Warning: [Reconnect] NetMode=2, World=MultiMap, Players=2, MyPawn=BP_ZCharacter_FPS_C_0
+LogTemp: Warning: [Reconnect] Character=BP_ZCharacter_FPS_C_0, Local=1, Hidden=0, Location=X=-1050.000 Y=3400.000 Z=90.150
+LogTemp: Warning: [Reconnect] NetMode=3, World=MultiMap, Players=2, MyPawn=BP_ZCharacter_FPS_C_1
+LogTemp: Warning: [Reconnect] Character=BP_ZCharacter_FPS_C_0, Local=0, Hidden=0, Location=X=-1050.000 Y=3400.000 Z=90.150
+LogTemp: Warning: [Reconnect] Character=BP_ZCharacter_FPS_C_1, Local=1, Hidden=0, Location=X=440.000 Y=-3770.000 Z=90.100
+LogTemp: Warning: [Reconnect] NetMode=0, World=MultiMap, Players=1, MyPawn=BP_ZCharacter_FPS_C_0
+LogTemp: Warning: [Reconnect] Character=BP_ZCharacter_FPS_C_0, Local=1, Hidden=0, Location=X=440.000 Y=-3770.000 Z=90.150
